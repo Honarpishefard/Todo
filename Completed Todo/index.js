@@ -5,10 +5,12 @@ const todoMainList = document.getElementById("mainlist");
 const toastElement = document.getElementById("toast");
 const alertCloseButton = document.getElementById("close-alert");
 
+function getLcTodos() {
+    const savedLcTodo = localStorage.getItem("todoList");
+    return JSON.parse(savedLcTodo)?.sort((a, b) => a.id - b.id) || [];
+};
 
-const savedLcTodo = localStorage.getItem("todoList");
-const parsedLcTodo = JSON.parse(savedLcTodo) || [];
-let savedTodo = [...parsedLcTodo];
+let savedTodo = [...getLcTodos()];
 
 const todoCreator = (tittle, desc, id, checked) => {
     const listItem = document.createElement("li");
@@ -29,9 +31,11 @@ const todoCreator = (tittle, desc, id, checked) => {
     deleteBttn.addEventListener("click", (event) => {
         const todoParent = event.target.parentElement;
         console.log(todoParent.id);
-        const filteredTodo = savedTodo.filter((item) => item.id !== Number(todoParent.id));
+        const filteredTodo = getLcTodos().filter((item) => item.id !== Number(todoParent.id));
+        savedTodo = filteredTodo;
         localStorage.setItem("todoList", JSON.stringify(filteredTodo));
-        location.reload();
+        todoMainList.innerHTML = "";
+        renderLcTodo();
     });
 
     const checkBttn = document.createElement("button");
@@ -40,16 +44,18 @@ const todoCreator = (tittle, desc, id, checked) => {
 
     checkBttn.addEventListener("click", (event) => {
         const todoParent = event.target.parentElement;
-        const filteredTodos = savedTodo.filter((item) => item.id === Number(todoParent.id));
+        const filteredTodos = getLcTodos().filter((item) => item.id === Number(todoParent.id));
         const updatedTodo = {
             ...filteredTodos[0],
             checked: true,
         };
-        const filteredTodo = savedTodo.filter((item) => item.id !== Number(todoParent.id));
+        const filteredTodo = getLcTodos().filter((item) => item.id !== Number(todoParent.id));
         const updateLc = [...filteredTodo, updatedTodo];
 
         localStorage.setItem("todoList", JSON.stringify(updateLc));
-        location.reload();
+
+        todoMainList.innerHTML = "";
+        renderLcTodo();
     });
 
     if (checked) {
@@ -88,18 +94,19 @@ const todoCreator = (tittle, desc, id, checked) => {
         listItem.replaceChild(descEdite, parapraph);
 
         tittleEditeSumbit.addEventListener("click", () => {
-            const filteredTodosTittle = savedTodo.filter((item) => item.id === Number(tittleEditeInput.id));
-            const filteredTodosDesc = savedTodo.filter((item) => item.id === Number(descEditeInput.id));
+            const filteredTodosTittle = getLcTodos().filter((item) => item.id === Number(tittleEditeInput.id));
+            const filteredTodosDesc = getLcTodos().filter((item) => item.id === Number(descEditeInput.id));
             const updatedTodo = {
                 ...filteredTodosTittle[0],
                 ...filteredTodosDesc[0],
                 tittle: tittleEditeInput.value,
                 desc: descEditeInput.value,
             };
-            const filteredTodo = savedTodo.filter((item) => item.id !== Number(tittleEditeInput.id));
+            const filteredTodo = getLcTodos().filter((item) => item.id !== Number(tittleEditeInput.id));
             const updateLc = [...filteredTodo, updatedTodo];
             localStorage.setItem("todoList", JSON.stringify(updateLc));
-            location.reload();
+            todoMainList.innerHTML = "";
+            renderLcTodo();
         });
     });
 
@@ -112,9 +119,14 @@ const todoCreator = (tittle, desc, id, checked) => {
     todoMainList.appendChild(listItem);
 };
 
-savedTodo.forEach((todo) => {
-    todoCreator(todo.tittle, todo.desc, todo.id, todo.checked);
-});
+
+function renderLcTodo() {
+    getLcTodos().forEach((todo) => {
+        todoCreator(todo.tittle, todo.desc, todo.id, todo.checked);
+    });
+};
+
+renderLcTodo();
 
 const handleCreateNewTodo = (event) => {
     event.preventDefault();
